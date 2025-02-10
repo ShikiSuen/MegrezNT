@@ -117,9 +117,9 @@ public partial class Node {
   /// <param name="node"></param>
   public Node(Node node) {
     OverridingScore = node.OverridingScore;
-    KeyArray = node.KeyArray;
+    KeyArray = node.KeyArray.ToList();
     SpanLength = node.SpanLength;
-    Unigrams = node.Unigrams;
+    Unigrams = node.Unigrams.ToList();
     CurrentOverrideType = node.CurrentOverrideType;
     CurrentUnigramIndex = node.CurrentUnigramIndex;
   }

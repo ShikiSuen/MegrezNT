@@ -156,7 +156,7 @@ public class KeyValuePaired {
                string.Compare(lhs.Value, rhs.Value, StringComparison.Ordinal) >= 0;
   }
 }
-public partial struct Compositor {
+public partial class Compositor {
   /// <summary>
   /// 候選字陣列內容的獲取範圍類型。
   /// </summary>

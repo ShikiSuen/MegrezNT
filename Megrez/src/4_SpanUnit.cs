@@ -9,7 +9,7 @@ using System.Collections.Generic;
 using System.Linq;
 
 namespace Megrez {
-public partial struct Compositor {
+public partial class Compositor {
   /// <summary>
   /// 幅位單元乃指一組共享起點的節點。
   /// </summary>

@@ -25,7 +25,7 @@ public interface LangModelProtocol {
   public bool HasUnigramsFor(List<string> keyArray);
 }
 
-public partial struct Compositor {
+public partial class Compositor {
   /// <summary>
   /// 一個專門用來與其它語言模型對接的外皮模組層，將所有獲取到的資料自動做穩定排序處理。
   /// </summary>

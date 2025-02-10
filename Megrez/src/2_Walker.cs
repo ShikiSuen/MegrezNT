@@ -9,7 +9,7 @@ using System.Collections.Generic;
 using System.Linq;
 
 namespace Megrez {
-public partial struct Compositor {
+public partial class Compositor {
   /// <summary>
   /// 爬軌函式，會以 Dijkstra 算法更新當前組字器的 walkedNodes。<para/>
   /// 該算法會在圖中尋找具有最高分數的路徑，即最可能的字詞組合。<para/>

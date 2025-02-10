@@ -530,7 +530,7 @@ public class MegrezTests : TestDataClass {
     foreach (string key in rawReadings.Split(separator: ' ')) {
       compositorA.InsertKey(key);
     }
-    Compositor compositorB = compositorA.HardCopy();
+    Compositor compositorB = compositorA.Copy();
     List<Node> resultA = compositorA.Walk();
     List<Node> resultB = compositorB.Walk();
     Assert.True(resultA.SequenceEqual(resultB));

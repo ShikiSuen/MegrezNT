@@ -33,7 +33,7 @@ namespace Megrez {
 /// 作為節點塞到組字器內，就可以用一個簡單的有向無環圖爬軌過程、來利用這些隱性資料值
 /// 算出最大相似估算結果。
 /// </remarks>
-public partial struct Compositor {
+public partial class Compositor {
   // MARK: - Enums.
   /// <summary>
   /// 就文字輸入方向而言的方向。
@@ -65,6 +65,11 @@ public partial struct Compositor {
 
   // MARK: - Variables.
 
+  /// <summary>
+  /// 組字器的組態設定。
+  /// </summary>
+  public CompositorConfig Config = new();
+
   private static int _maxSpanLength = 10;
   /// <summary>
   /// 一個幅位單元內所能接受的最長的節點幅位長度。
@@ -84,34 +89,29 @@ public partial struct Compositor {
 
   /// <summary>
   /// 在生成索引鍵字串時用來分割每個索引鍵單位。最好是鍵盤無法直接敲的 ASCII 字元。
-  /// </summary>
+  /// /// </summary>
   /// <remarks>
   /// 更新該內容會同步更新 <see cref="TheSeparator"/>；每次初期化一個新的組字器的時候都會覆寫之。
   /// </remarks>
   public string Separator {
-    get => TheSeparator;
-    set => TheSeparator = value;
+    get => Config.Separator;
+    set => Config.Separator = value;
   }
 
-  private int _cursor = 0;
   /// <summary>
   /// 該組字器的敲字游標位置。
   /// </summary>
   public int Cursor {
-    get => _cursor;
-    set {
-      _cursor = Math.Max(0, Math.Min(value, Length));
-      _marker = Cursor;
-    }
+    get => Config.Cursor;
+    set => Config.Cursor = value;
   }
 
-  private int _marker = 0;
   /// <summary>
   /// 該組字器的標記器（副游標）位置。
   /// </summary>
   public int Marker {
-    get => _cursor;
-    set => _marker = Math.Max(0, Math.Min(value, Length));
+    get => Config.Marker;
+    set => Config.Marker = value;
   }
 
   /// <summary>
@@ -126,19 +126,30 @@ public partial struct Compositor {
   /// <summary>
   /// 最近一次爬軌結果。
   /// </summary>
-  public List<Node> WalkedNodes = new();
+  public List<Node> WalkedNodes {
+    get => Config.WalkedNodes;
+    set => Config.WalkedNodes = value;
+  }
   /// <summary>
   /// 組字器是否為空。
   /// </summary>
   public bool IsEmpty => Spans.IsEmpty() && Keys.IsEmpty();
+
   /// <summary>
   /// 該組字器已經插入的的索引鍵，以陣列的形式存放。
   /// </summary>
-  public List<string> Keys { get; }
+  public List<string> Keys {
+    get => Config.Keys;
+    set => Config.Keys = value;
+  }
+
   /// <summary>
   /// 該組字器的幅位單元陣列。
   /// </summary>
-  public List<SpanUnit> Spans { get; private set; }
+  public List<SpanUnit> Spans {
+    get => Config.Spans;
+    set => Config.Spans = value;
+  }
 
   private LangModelRanked _theLangModel;
   /// <summary>
@@ -169,8 +180,6 @@ public partial struct Compositor {
   public Compositor(LangModelProtocol langModel, string separator = "-") {
     _theLangModel = new(ref langModel);
     TheSeparator = separator;
-    Keys = new();
-    Spans = new();
   }
 
   /// <summary>
@@ -184,13 +193,7 @@ public partial struct Compositor {
   /// <param name="compositor"></param>
   public Compositor(Compositor compositor) {
     _theLangModel = compositor.TheLangModel;
-    _cursor = compositor.Cursor;
-    _marker = compositor.Marker;
-    Keys = compositor.Keys;
-    Spans = new();
-    Separator = compositor.Separator;
-    foreach (Node walkedNode in compositor.WalkedNodes) WalkedNodes.Add(walkedNode.Copy());
-    foreach (SpanUnit span in compositor.Spans) Spans.Add(span.HardCopy());
+    Config = compositor.Config.HardCopy();
   }
 
   /// <summary>
@@ -202,7 +205,7 @@ public partial struct Compositor {
   /// 這在某些情況下會造成意料之外的混亂情況，所以需要引入一個拷貝用的建構子。
   /// </remarks>
   /// <returns>拷貝。</returns>
-  public Compositor HardCopy() => new(compositor: this);
+  public Compositor Copy() => new(compositor: this);
 
   /// <summary>
   /// 重置包括游標在內的各項參數，且清空各種由組字器生成的內部資料。<para/>
@@ -210,11 +213,8 @@ public partial struct Compositor {
   /// 最近一次的爬軌結果陣列也會被清空。游標跳轉換算表也會被清空。
   /// </summary>
   public void Clear() {
-    _cursor = 0;
-    _marker = 0;
-    Keys.Clear();
-    Spans.Clear();
-    WalkedNodes.Clear();
+    string oldSeparator = Config.Separator;
+    Config = new() { Separator = oldSeparator };
   }
 
   /// <summary>
@@ -468,6 +468,88 @@ public partial struct Compositor {
       }
     }
     return nodesChanged;
+  }
+}
+/// <summary>
+/// 組字器的組態設定專用記錄物件。
+/// </summary>
+public struct CompositorConfig {
+  /// <summary>
+  /// 初期化一套組字器組態設定。
+  /// </summary>
+  public CompositorConfig() {}
+
+  /// <summary>
+  /// 最近一次爬軌結果。
+  /// </summary>
+  public List<Node> WalkedNodes = new();
+  /// <summary>
+  /// 該組字器已經插入的的索引鍵，以陣列的形式存放。
+  /// </summary>
+  public List<string> Keys = new();
+  /// <summary>
+  /// 該組字器的幅位單元陣列。
+  /// </summary>
+  public List<Compositor.SpanUnit> Spans = new();
+
+  private int _cursor = 0;
+  /// <summary>
+  /// 該組字器的敲字游標位置。
+  /// </summary>
+  public int Cursor {
+    get => _cursor;
+    set {
+      _cursor = Math.Max(0, Math.Min(value, Length));
+      _marker = Cursor;  // 同步当前游标至标记器。
+    }
+  }
+
+  private int _marker = 0;
+
+  /// <summary>
+  /// 該組字器的標記器（副游標）位置。
+  /// </summary>
+  public int Marker {
+    get => _marker;
+    set => _marker = Math.Max(0, Math.Min(value, Length));
+  }
+
+  /// <summary>
+  /// 在生成索引鍵字串時用來分割每個索引鍵單位。最好是鍵盤無法直接敲的 ASCII 字元。
+  /// </summary>
+  /// <remarks>
+  /// 更新該內容會同步更新 <see cref="Compositor.TheSeparator"/>；每次初期化一個新的組字器的時候都會覆寫之。
+  /// </remarks>
+  public string Separator {
+    get => Compositor.TheSeparator;
+    set => Compositor.TheSeparator = value;
+  }
+
+  /// <summary>
+  /// 公開：該組字器的長度。<para/>
+  /// 組字器內已經插入的單筆索引鍵的數量，也就是內建漢字讀音的數量（唯讀）。
+  /// </summary>
+  /// <remarks>
+  /// 理論上而言，spans.count 也是這個數。
+  /// 但是，為了防止萬一，就用了目前的方法來計算。
+  /// </remarks>
+  public int Length => Keys.Count;
+
+  /// <summary>
+  /// 生成自身的拷貝。
+  /// </summary>
+  /// <remarks>
+  /// 因為 Node 不是 Struct，所以會在 Compositor 被拷貝的時候無法被真實複製。
+  /// 這樣一來，Compositor 複製品當中的 Node 的變化會被反應到原先的 Compositor 身上。
+  /// 這在某些情況下會造成意料之外的混亂情況，所以需要引入一個拷貝用的建構子。
+  /// </remarks>
+  /// <returns>拷貝。</returns>
+  public CompositorConfig HardCopy() {
+    CompositorConfig config = this;
+    config.Keys = Keys.ToList();  // List 是 class，需要單獨複製。
+    config.Spans = Spans.Select(x => x.HardCopy()).ToList();
+    config.WalkedNodes = WalkedNodes.Select(x => x.Copy()).ToList();
+    return config;
   }
 }
 }  // namespace Megrez
