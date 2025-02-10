@@ -46,6 +46,21 @@ public partial class Compositor {
     }
 
     /// <summary>
+    ///
+    /// </summary>
+    /// <param name="obj"></param>
+    /// <returns></returns>
+    public override bool Equals(object obj) {
+      return obj is not SpanUnit spanUnit ? false : Nodes.SequenceEqual(spanUnit.Nodes);
+    }
+
+    /// <summary>
+    ///
+    /// </summary>
+    /// <returns></returns>
+    public override int GetHashCode() { return Nodes.GetHashCode(); }
+
+    /// <summary>
     /// 生成自身的拷貝。
     /// </summary>
     /// <remarks>

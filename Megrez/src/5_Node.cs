@@ -144,7 +144,7 @@ public partial class Node {
     return obj is not Node node
                ? false
                : OverridingScore == node.OverridingScore && KeyArray.SequenceEqual(node.KeyArray) &&
-                     SpanLength == node.SpanLength && Unigrams == node.Unigrams &&
+                     SpanLength == node.SpanLength && Unigrams.SequenceEqual(node.Unigrams) &&
                      CurrentOverrideType == node.CurrentOverrideType && CurrentUnigramIndex == node.CurrentUnigramIndex;
   }
 

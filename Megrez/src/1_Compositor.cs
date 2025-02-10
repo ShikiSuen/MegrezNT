@@ -551,5 +551,27 @@ public struct CompositorConfig {
     config.WalkedNodes = WalkedNodes.Select(x => x.Copy()).ToList();
     return config;
   }
+
+  /// <summary>
+  ///
+  /// </summary>
+  /// <param name="obj"></param>
+  /// <returns></returns>
+  public override bool Equals(object obj) {
+    if (obj is not CompositorConfig other) return false;
+    return Cursor == other.Cursor && Marker == other.Marker && Separator == other.Separator &&
+           Keys.SequenceEqual(other.Keys) && Spans.SequenceEqual(other.Spans) &&
+           WalkedNodes.SequenceEqual(other.WalkedNodes);
+  }
+
+  /// <summary>
+  ///
+  /// </summary>
+  /// <returns></returns>
+  public override int GetHashCode() {
+    int[] x = { Cursor.GetHashCode(), Marker.GetHashCode(), Separator.GetHashCode(),
+                Keys.GetHashCode(),   Spans.GetHashCode(),  WalkedNodes.GetHashCode() };
+    return x.GetHashCode();
+  }
 }
 }  // namespace Megrez

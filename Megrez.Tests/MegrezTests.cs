@@ -531,6 +531,7 @@ public class MegrezTests : TestDataClass {
       compositorA.InsertKey(key);
     }
     Compositor compositorB = compositorA.Copy();
+    Assert.True(compositorA.Spans.SequenceEqual(compositorB.Spans));
     List<Node> resultA = compositorA.Walk();
     List<Node> resultB = compositorB.Walk();
     Assert.True(resultA.SequenceEqual(resultB));
