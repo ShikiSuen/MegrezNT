@@ -403,8 +403,10 @@ public partial struct Compositor {
     int affectedLength = MaxSpanLength - 1;
     int begin = Math.Max(0, location - affectedLength);
     if (location < begin) return;
-    foreach (int i in new BRange(begin, location)) {
-      Spans[i].DropNodesOfOrBeyond(location - i + 1);
+    foreach (int delta in new BRange(begin, location)) {
+      foreach (int theLength in new BRange(location - delta + 1, MaxSpanLength)) {
+        Spans[delta].Nodes.Remove(theLength);
+      }
     }
   }
 
@@ -428,7 +430,7 @@ public partial struct Compositor {
   private Node? GetNodeAt(int location, int length, List<string> keyArray) {
     location = Math.Max(Math.Min(location, Spans.Count - 1), 0);  // 防呆。
     return Spans[location].NodeOf(length) is not {}
-    node ? null : (node.KeyArray.SequenceEqual(keyArray)) ? node : null;
+    node ? null : node.KeyArray.SequenceEqual(keyArray) ? node : null;
   }
 
   /// <summary>

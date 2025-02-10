@@ -32,21 +32,6 @@ public class MegrezTests : TestDataClass {
     Assert.AreEqual(actual: span.NodeOf(length: 1), expected: null);
     Assert.AreEqual(actual: span.NodeOf(length: 2), expected: null);
     Assert.AreEqual(actual: span.NodeOf(length: 3), expected: null);
-
-    span.Append(node: n1);
-    span.Append(node: n3);
-    span.DropNodesOfOrBeyond(length: 2);
-    Assert.AreEqual(actual: span.MaxLength, expected: 1);
-    Assert.AreEqual(actual: span.NodeOf(length: 1), expected: n1);
-    Assert.AreEqual(actual: span.NodeOf(length: 2), expected: null);
-    Assert.AreEqual(actual: span.NodeOf(length: 3), expected: null);
-    span.DropNodesOfOrBeyond(length: 1);
-    Assert.AreEqual(actual: span.MaxLength, expected: 0);
-    Assert.AreEqual(actual: span.NodeOf(length: 1), expected: null);
-    Node n114514 = new(new(), 114_514, new());
-    Assert.IsFalse(span.Append(n114514));
-    Assert.IsNull(span.NodeOf(length: 0));
-    Assert.IsNull(span.NodeOf(length: Compositor.MaxSpanLength + 1));
   }
 
   [Test]
