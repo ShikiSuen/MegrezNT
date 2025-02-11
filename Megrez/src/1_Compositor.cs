@@ -69,14 +69,12 @@ public partial class Compositor {
   /// 組字器的組態設定。
   /// </summary>
   public CompositorConfig Config = new();
-
-  private static int _maxSpanLength = 10;
   /// <summary>
   /// 一個幅位單元內所能接受的最長的節點幅位長度。
   /// </summary>
-  public static int MaxSpanLength {
-    get => _maxSpanLength;
-    set => _maxSpanLength = Math.Max(6, value);
+  public int MaxSpanLength {
+    get => Config.MaxSpanLength;
+    set => Config.MaxSpanLength = value;
   }
 
   /// <summary>
@@ -470,7 +468,7 @@ public partial class Compositor {
         List<Unigram> unigramsB = TheLangModel.UnigramsFor(joinedKeyArray);
         if (unigramsB.IsEmpty()) continue;
         if (position < 0 || position >= Spans.Count) continue;
-        Spans[position].Append(new(joinedKeyArray, theLength, unigramsB));
+        Spans[position].Nodes[theLength] = new(joinedKeyArray, theLength, unigramsB);
         nodesChanged += 1;
       }
     }
@@ -484,7 +482,17 @@ public struct CompositorConfig {
   /// <summary>
   /// 初期化一套組字器組態設定。
   /// </summary>
-  public CompositorConfig() {}
+  public CompositorConfig(List<Node>? walkedNodes = null, List<string>? keys = null,
+                          List<Compositor.SpanUnit>? spans = null, int cursor = 0, int maxSpanLength = 10,
+                          int marker = 0, string separator = null) {
+    WalkedNodes = walkedNodes ?? new List<Node>();
+    Keys = keys ?? new List<string>();
+    Spans = spans ?? new List<Compositor.SpanUnit>();
+    _cursor = cursor;
+    _maxSpanLength = maxSpanLength;
+    _marker = marker;
+    _separator = separator;
+  }
 
   /// <summary>
   /// 最近一次爬軌結果。
@@ -511,6 +519,15 @@ public struct CompositorConfig {
     }
   }
 
+  private int _maxSpanLength = 10;
+  /// <summary>
+  /// 一個幅位單元內所能接受的最長的節點幅位長度。
+  /// </summary>
+  public int MaxSpanLength {
+    get => _maxSpanLength;
+    set => _maxSpanLength = Math.Max(6, value);
+  }
+
   private int _marker = 0;
 
   /// <summary>
@@ -521,6 +538,7 @@ public struct CompositorConfig {
     set => _marker = Math.Max(0, Math.Min(value, Length));
   }
 
+  private string _separator;
   /// <summary>
   /// 在生成索引鍵字串時用來分割每個索引鍵單位。最好是鍵盤無法直接敲的 ASCII 字元。
   /// </summary>
@@ -528,8 +546,8 @@ public struct CompositorConfig {
   /// 更新該內容會同步更新 <see cref="Compositor.TheSeparator"/>；每次初期化一個新的組字器的時候都會覆寫之。
   /// </remarks>
   public string Separator {
-    get => Compositor.TheSeparator;
-    set => Compositor.TheSeparator = value;
+    get => _separator;
+    set => _separator = value;
   }
 
   /// <summary>
@@ -556,6 +574,10 @@ public struct CompositorConfig {
     config.Keys = Keys.ToList();  // List 是 class，需要單獨複製。
     config.Spans = Spans.Select(x => x.HardCopy()).ToList();
     config.WalkedNodes = WalkedNodes.Select(x => x.Copy()).ToList();
+    config.Separator = Separator;
+    config.MaxSpanLength = MaxSpanLength;
+    config.Cursor = Cursor;
+    config.Marker = Marker;
     return config;
   }
 
@@ -566,8 +588,8 @@ public struct CompositorConfig {
   /// <returns></returns>
   public override bool Equals(object obj) {
     if (obj is not CompositorConfig other) return false;
-    return Cursor == other.Cursor && Marker == other.Marker && Separator == other.Separator &&
-           Keys.SequenceEqual(other.Keys) && Spans.SequenceEqual(other.Spans) &&
+    return Cursor == other.Cursor && Marker == other.Marker && MaxSpanLength == other.MaxSpanLength &&
+           Separator == other.Separator && Keys.SequenceEqual(other.Keys) && Spans.SequenceEqual(other.Spans) &&
            WalkedNodes.SequenceEqual(other.WalkedNodes);
   }
 
@@ -576,9 +598,17 @@ public struct CompositorConfig {
   /// </summary>
   /// <returns></returns>
   public override int GetHashCode() {
-    int[] x = { Cursor.GetHashCode(), Marker.GetHashCode(), Separator.GetHashCode(),
-                Keys.GetHashCode(),   Spans.GetHashCode(),  WalkedNodes.GetHashCode() };
-    return x.GetHashCode();
+    unchecked {       // 使用 unchecked 來允許溢位操作
+      int hash = 17;  // 使用質數作為基礎值
+      hash = hash * 23 + Cursor.GetHashCode();
+      hash = hash * 23 + Marker.GetHashCode();
+      hash = hash * 23 + MaxSpanLength.GetHashCode();
+      hash = hash * 23 + (Separator?.GetHashCode() ?? 0);
+      hash = hash * 23 + Keys.GetHashCode();
+      hash = hash * 23 + Spans.GetHashCode();
+      hash = hash * 23 + WalkedNodes.GetHashCode();
+      return hash;
+    }
   }
 }
 }  // namespace Megrez

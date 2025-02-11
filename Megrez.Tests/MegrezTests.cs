@@ -20,9 +20,9 @@ public class MegrezTests : TestDataClass {
     Node n3 = new(keyArray: new() { "gao1", "ke1", "ji4" }, spanLength: 3,
                   unigrams: langModel.UnigramsFor(new() { "gao1ke1ji4" }));
     Assert.AreEqual(actual: span.MaxLength, expected: 0);
-    span.Append(node: n1);
+    span.Nodes[n1.SpanLength] = n1;
     Assert.AreEqual(actual: span.MaxLength, expected: 1);
-    span.Append(node: n3);
+    span.Nodes[n3.SpanLength] = n3;
     Assert.AreEqual(actual: span.MaxLength, expected: 3);
     Assert.AreEqual(actual: span.NodeOf(length: 1), expected: n1);
     Assert.AreEqual(actual: span.NodeOf(length: 2), expected: null);

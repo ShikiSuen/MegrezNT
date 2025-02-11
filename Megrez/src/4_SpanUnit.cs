@@ -77,16 +77,6 @@ public partial class Compositor {
     public void Clear() => Nodes.Clear();
 
     /// <summary>
-    /// 往該幅位塞入一個節點。
-    /// </summary>
-    /// <param name="node">要塞入的節點。</param>
-    /// <returns>該操作是否成功執行。</returns>
-    public bool Append(Node node) {
-      Nodes[node.SpanLength] = node;
-      return true;
-    }
-
-    /// <summary>
     /// 以給定的幅位長度，在當前幅位單元內找出對應的節點。
     /// </summary>
     /// <param name="length">給定的幅位長度。</param>
