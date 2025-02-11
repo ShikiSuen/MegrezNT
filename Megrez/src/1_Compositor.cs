@@ -226,7 +226,7 @@ public partial class Compositor {
     if (string.IsNullOrEmpty(key) || key == Separator) return false;
     if (!TheLangModel.HasUnigramsFor(new() { key })) return false;
     Keys.Insert(Cursor, key);
-    List<SpanUnit> gridBackup = Spans;
+    List<SpanUnit> gridBackup = Spans.Select(x => x.HardCopy()).ToList();
     ResizeGridAt(Cursor, ResizeBehavior.Expand);
     int nodesInserted = Update();
     // 用來在 langModel.HasUnigramsFor() 結果不準確的時候防呆、恢復被搞壞的 Spans。
