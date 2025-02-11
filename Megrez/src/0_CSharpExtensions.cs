@@ -134,6 +134,8 @@ public class HybridPriorityQueue<T> : IDisposable
   private int _count;                      // 追蹤實際元素數量。
   private readonly bool _isReversed;
   private bool _usingArray;
+  private readonly object _syncRoot = new();
+  private bool _isDisposed;
 
   public HybridPriorityQueue(bool reversed = false) {
     _isReversed = reversed;
@@ -153,51 +155,55 @@ public class HybridPriorityQueue<T> : IDisposable
   public bool IsEmpty => _count == 0;
 
   public void Enqueue(T element) {
-    // 確保容量足夠
-    if (_count == _storage.Length) {
-      Array.Resize(ref _storage, _storage.Length * 2);
-    }
-
-    if (_usingArray) {
-      if (_count >= ArrayThreshold) {
-        SwitchToHeap();
-        _storage[_count++] = element;
-        HeapifyUp(_count - 1);
-        return;
+    lock (_syncRoot) {
+      // 確保容量足夠
+      if (_count == _storage.Length) {
+        Array.Resize(ref _storage, _storage.Length * 2);
       }
 
-      // 使用二分搜尋找到插入點。
-      int insertIndex = FindInsertionPoint(element);
-      // 手動移動元素以避免使用 Array.Copy（減少函數呼叫開銷）。
-      for (int i = _count; i > insertIndex; i--) {
-        _storage[i] = _storage[i - 1];
+      if (_usingArray) {
+        if (_count >= ArrayThreshold) {
+          SwitchToHeap();
+          _storage[_count++] = element;
+          HeapifyUp(_count - 1);
+          return;
+        }
+
+        // 使用二分搜尋找到插入點。
+        int insertIndex = FindInsertionPoint(element);
+        // 手動移動元素以避免使用 Array.Copy（減少函數呼叫開銷）。
+        for (int i = _count; i > insertIndex; i--) {
+          _storage[i] = _storage[i - 1];
+        }
+        _storage[insertIndex] = element;
+        _count++;
+      } else {
+        _storage[_count] = element;
+        HeapifyUp(_count++);
       }
-      _storage[insertIndex] = element;
-      _count++;
-    } else {
-      _storage[_count] = element;
-      HeapifyUp(_count++);
     }
   }
 
   public T? Dequeue() {
-    if (_count == 0) return default;
+    lock (_syncRoot) {
+      if (_count == 0) return default;
 
-    T result = _storage[0];
-    _count--;
+      T result = _storage[0];
+      _count--;
 
-    if (_usingArray) {
-      // 手動移動元素以避免使用 Array.Copy。
-      for (int i = 0; i < _count; i++) {
-        _storage[i] = _storage[i + 1];
+      if (_usingArray) {
+        // 手動移動元素以避免使用 Array.Copy。
+        for (int i = 0; i < _count; i++) {
+          _storage[i] = _storage[i + 1];
+        }
+        return result;
       }
+
+      // 堆積模式。
+      _storage[0] = _storage[_count];
+      if (_count > 0) HeapifyDown(0);
       return result;
     }
-
-    // 堆積模式。
-    _storage[0] = _storage[_count];
-    if (_count > 0) HeapifyDown(0);
-    return result;
   }
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -205,32 +211,39 @@ public class HybridPriorityQueue<T> : IDisposable
     int left = 0;
     int right = _count;
 
-    // 展開循環以提高分支預測效率。
-    while (right - left > 1) {
-      int mid = (left + right) >> 1;
-      int midStorage = element.CompareTo(_storage[mid]);
-      if (_isReversed ? midStorage > 0 : midStorage < 0) {
+    while (left < right) {
+      int mid = left + ((right - left) >> 1);
+      int comparison = Compare(element, _storage[mid]);
+      if (comparison < 0) {
         right = mid;
       } else {
-        left = mid;
+        left = mid + 1;
       }
     }
 
-    // 處理邊界情況。
-    int leftStorage = element.CompareTo(_storage[left]);
-    bool marginCondition = _isReversed ? leftStorage <= 0 : leftStorage >= 0;
-    return left < _count && marginCondition ? left + 1 : left;
+    // 處理邊界情況
+    if (left > 0) {
+      int comparison = Compare(element, _storage[left - 1]);
+      if (comparison < 0) {
+        return left - 1;
+      }
+    }
+    return left;
   }
 
   private void SwitchToHeap() {
+    var backupStorage = (T[])_storage.Clone();
+    var backupCount = _count;
+
     try {
       _usingArray = false;
-      // 就地轉換為堆積，使用更有效率的方式。
       for (int i = (_count >> 1) - 1; i >= 0; i--) {
         HeapifyDown(i);
       }
-    } catch {
-      Clear();  // 確保發生異常時也能清理。
+    } catch (Exception) {
+      _storage = backupStorage;
+      _count = backupCount;
+      _usingArray = true;
       throw;
     }
   }
@@ -283,17 +296,32 @@ public class HybridPriorityQueue<T> : IDisposable
   /// 清空佇列。
   /// </summary>
   public void Clear() {
+    if (_storage != null) {
+      Array.Clear(_storage, 0, _storage.Length);
+      if (_storage.Length > InitialCapacity) {
+        _storage = new T[InitialCapacity];
+      }
+    }
     _count = 0;
     _usingArray = true;
-    if (_storage.Length > InitialCapacity) {
-      _storage = new T[InitialCapacity];
-    }
-    Array.Clear(_storage, 0, _storage.Length);  // 清除所有參考。
   }
 
   public void Dispose() {
+    if (_isDisposed) return;
+
     Clear();
-    _storage = null;
+    if (_storage != null) {
+      Array.Clear(_storage, 0, _storage.Length);
+      _storage = null!;
+    }
+    _isDisposed = true;
+    GC.SuppressFinalize(this);
+  }
+
+  protected virtual void ThrowIfDisposed() {
+    if (_isDisposed) {
+      throw new ObjectDisposedException(nameof(HybridPriorityQueue<T>));
+    }
   }
 }
 }  // namespace Megrez
