@@ -92,13 +92,39 @@ public struct BRange : IEnumerable<int> {
   public int Lowerbound { get; }
   public int Upperbound { get; }
   public BRange(int lowerbound, int upperbound) {
+    Lowerbound = lowerbound;
+    Upperbound = (upperbound < lowerbound) ? lowerbound : upperbound;
+  }
+
+  public List<int> ToList() {
+    List<int> result = new();
+    for (int i = Lowerbound; i <= Upperbound; i++) {
+      result.Add(i);
+    }
+    return result;
+  }
+
+  public IEnumerable<EnumeratedItem<int>> Enumerated() => ToList().Enumerated();
+
+  IEnumerator<int> IEnumerable<int>.GetEnumerator() => ToList().GetEnumerator();
+
+  IEnumerator IEnumerable.GetEnumerator() => ToList().GetEnumerator();
+}
+
+/// <summary>
+/// 一個「可以返回整數的上下限」的自訂 Range 類型。該類型允許邊界顛倒。
+/// </summary>
+public struct BRangeSwappable : IEnumerable<int> {
+  public int Lowerbound { get; }
+  public int Upperbound { get; }
+  public BRangeSwappable(int lowerbound, int upperbound) {
     Lowerbound = Math.Min(lowerbound, upperbound);
     Upperbound = Math.Max(lowerbound, upperbound);
   }
 
   public List<int> ToList() {
     List<int> result = new();
-    for (int i = Lowerbound; i < Upperbound; i++) {
+    for (int i = Lowerbound; i <= Upperbound; i++) {
       result.Add(i);
     }
     return result;

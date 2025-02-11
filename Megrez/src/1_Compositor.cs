@@ -404,8 +404,12 @@ public partial class Compositor {
     int begin = Math.Max(0, location - affectedLength);
     if (location < begin) return;
     foreach (int delta in new BRange(begin, location)) {
-      foreach (int theLength in new BRange(location - delta + 1, MaxSpanLength)) {
-        Spans[delta].Nodes.Remove(theLength);
+      int lowestLength = location - delta + 1;
+      if (lowestLength > MaxSpanLength) break;
+      foreach (int theLength in new BRange(lowestLength, MaxSpanLength)) {
+        if (delta >= 0 && delta < Spans.Count) {
+          Spans[delta].Nodes.Remove(theLength);
+        }
       }
     }
   }
@@ -429,8 +433,9 @@ public partial class Compositor {
   /// <returns>拿取的節點。拿不到的話就會是 null。</returns>
   private Node? GetNodeAt(int location, int length, List<string> keyArray) {
     location = Math.Max(Math.Min(location, Spans.Count - 1), 0);  // 防呆。
-    return Spans[location].NodeOf(length) is not {}
-    node ? null : node.KeyArray.SequenceEqual(keyArray) ? node : null;
+    if (location < 0 || location >= Spans.Count) return null;
+    if (Spans[location].NodeOf(length) is not {} node) return null;
+    return node.KeyArray.SequenceEqual(keyArray) ? node : null;
   }
 
   /// <summary>
@@ -445,7 +450,7 @@ public partial class Compositor {
     BRange range = new(Math.Max(0, Cursor - MaxSpanLength), Math.Min(Cursor + MaxSpanLength, Keys.Count));
     int nodesChanged = 0;
     foreach (int position in range) {
-      foreach (int theLength in new BRange(1, Math.Min(MaxSpanLength, range.Upperbound - position) + 1)) {
+      foreach (int theLength in new BRange(1, Math.Min(MaxSpanLength, range.Upperbound - position))) {
         List<string> joinedKeyArray = GetJoinedKeyArray(new(position, position + theLength));
         BRange safeLocationRange = new(0, Spans.Count);
         Node? theNode = safeLocationRange.Contains(position) ? GetNodeAt(position, theLength, joinedKeyArray) : null;
@@ -464,6 +469,7 @@ public partial class Compositor {
         }
         List<Unigram> unigramsB = TheLangModel.UnigramsFor(joinedKeyArray);
         if (unigramsB.IsEmpty()) continue;
+        if (position < 0 || position >= Spans.Count) continue;
         Spans[position].Append(new(joinedKeyArray, theLength, unigramsB));
         nodesChanged += 1;
       }
