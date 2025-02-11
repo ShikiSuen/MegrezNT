@@ -87,12 +87,6 @@ public partial class Compositor {
     }
 
     /// <summary>
-    /// 丟掉任何與給定節點完全雷同的節點。
-    /// </summary>
-    /// <param name="givenNode">要參照的節點。</param>
-    public void Nullify(Node givenNode) => Nodes.Remove(givenNode.SpanLength);
-
-    /// <summary>
     /// 以給定的幅位長度，在當前幅位單元內找出對應的節點。
     /// </summary>
     /// <param name="length">給定的幅位長度。</param>

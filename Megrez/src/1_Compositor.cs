@@ -452,9 +452,10 @@ public partial class Compositor {
         if (theNode is {}) {
           if (!updateExisting) continue;
           List<Unigram> unigramsA = TheLangModel.UnigramsFor(joinedKeyArray);
+          // 自動銷毀無效的節點。
           if (unigramsA.IsEmpty()) {
             if (theNode.KeyArray.Count == 1) continue;
-            Spans[position].Nullify(givenNode: theNode);
+            Spans[position].Nodes.Remove(theNode.SpanLength);
           } else {
             theNode.SyncingUnigramsFrom(unigramsA);
           }
