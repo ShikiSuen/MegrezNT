@@ -48,6 +48,13 @@ public partial class Compositor {
         TheLangModel.UnigramsFor(keyArray).StableSorted((x, y) => y.Score.CompareTo(x.Score));
     /// <inheritdoc />
     public bool HasUnigramsFor(List<string> keyArray) => TheLangModel.HasUnigramsFor(keyArray);
+    public override int GetHashCode() {
+      unchecked {
+        int hash = 17;
+        hash = hash * 23 + TheLangModel.GetHashCode();
+        return hash;
+      }
+    }
   }
 }
 }  // namespace Megrez

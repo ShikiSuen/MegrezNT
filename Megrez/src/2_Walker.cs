@@ -112,8 +112,12 @@ public partial class Compositor {
     public override bool Equals(object? obj) => Equals(obj as SearchState);
 
     public override int GetHashCode() {
-      int[] x = { Node.GetHashCode(), Position.GetHashCode() };
-      return x.GetHashCode();
+      unchecked {
+        int hash = 17;
+        hash = hash * 23 + Node.GetHashCode();
+        hash = hash * 23 + Position.GetHashCode();
+        return hash;
+      }
     }
   }
 

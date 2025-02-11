@@ -153,10 +153,16 @@ public partial class Node {
   /// </summary>
   /// <returns>目前物件的雜湊碼。</returns>
   public override int GetHashCode() {
-    int[] x = { OverridingScore.GetHashCode(),     KeyArray.GetHashCode(),
-                SpanLength.GetHashCode(),          Unigrams.GetHashCode(),
-                CurrentUnigramIndex.GetHashCode(), CurrentOverrideType.GetHashCode() };
-    return x.GetHashCode();
+    unchecked {
+      int hash = 17;
+      hash = hash * 23 + OverridingScore.GetHashCode();
+      hash = hash * 23 + KeyArray.GetHashCode();
+      hash = hash * 23 + SpanLength.GetHashCode();
+      hash = hash * 23 + Unigrams.GetHashCode();
+      hash = hash * 23 + CurrentUnigramIndex.GetHashCode();
+      hash = hash * 23 + CurrentOverrideType.GetHashCode();
+      return hash;
+    }
   }
 
   // MARK: - Dynamic Variables

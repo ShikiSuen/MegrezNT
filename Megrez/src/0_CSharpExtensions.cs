@@ -349,5 +349,16 @@ public class HybridPriorityQueue<T> : IDisposable
       throw new ObjectDisposedException(nameof(HybridPriorityQueue<T>));
     }
   }
+
+  public override int GetHashCode() {
+    unchecked {
+      int hash = 17;
+      hash = hash * 23 + _storage.GetHashCode();
+      hash = hash * 23 + _count.GetHashCode();
+      hash = hash * 23 + _isReversed.GetHashCode();
+      hash = hash * 23 + _usingArray.GetHashCode();
+      return hash;
+    }
+  }
 }
 }  // namespace Megrez

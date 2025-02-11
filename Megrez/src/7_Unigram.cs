@@ -42,7 +42,14 @@ public struct Unigram {
   /// 做為預設雜湊函式。
   /// </summary>
   /// <returns>目前物件的雜湊碼。</returns>
-  public override int GetHashCode() => new KeyValuePair<string, double>(Value, Score).GetHashCode();
+  public override int GetHashCode() {
+    unchecked {
+      int hash = 17;
+      hash = hash * 23 + Value.GetHashCode();
+      hash = hash * 23 + Score.GetHashCode();
+      return hash;
+    }
+  }
   /// <summary>
   /// 傳回代表目前物件的字串。
   /// </summary>
