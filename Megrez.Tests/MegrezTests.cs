@@ -301,7 +301,7 @@ public class MegrezTests : TestDataClass {
   [Test]
   public void Test13_WalkerBenchMark() {
     Console.WriteLine("// Stress test preparation begins.");
-    Compositor compositor = new(langModel: new SimpleLM(input: StrStressData));
+    Compositor compositor = new(langModel: new SimpleLM(input: StrStressData, separator: "-"));
     foreach (int _ in new BRange(0, 1919)) compositor.InsertKey("yi1");
     Console.WriteLine("// Stress test preparation started with keys inserted: " + compositor.Keys.Count);
     DateTime startTime = DateTime.Now;

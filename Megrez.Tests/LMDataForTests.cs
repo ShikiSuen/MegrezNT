@@ -13,7 +13,9 @@ namespace Megrez.Tests {
 
 public class SimpleLM : LangModelProtocol {
   private Dictionary<string, List<Unigram>> _database = new();
-  public SimpleLM(string input, bool swapKeyValue = false) {
+  public string separator { get; set; }
+  public SimpleLM(string input, bool swapKeyValue = false, string separator = "") {
+    this.separator = separator;
     List<string> sStream = new(input.Split('\n'));
     sStream.ForEach(line => {
       if (IsNullOrEmpty(line) || line.FirstOrDefault().CompareTo('#') == 0) return;
@@ -37,10 +39,10 @@ public class SimpleLM : LangModelProtocol {
       _database[key].Add(u);
     });
   }
-  public bool HasUnigramsFor(List<string> keyArray) => _database.ContainsKey(keyArray.Joined());
-  public List<Unigram> UnigramsFor(List<string> keyArray) => _database.ContainsKey(keyArray.Joined())
-                                                                 ? _database[keyArray.Joined()]
-                                                                 : new();
+  public bool HasUnigramsFor(List<string> keyArray) => _database.ContainsKey(keyArray.Joined(separator: separator));
+  public List<Unigram> UnigramsFor(List<string> keyArray) =>
+      _database.ContainsKey(keyArray.Joined(separator: separator)) ? _database[keyArray.Joined(separator: separator)]
+                                                                   : new();
   public void Trim(string key, string value) {
     if (!_database.TryGetValue(key, out List<Unigram>? arr)) return;
 
