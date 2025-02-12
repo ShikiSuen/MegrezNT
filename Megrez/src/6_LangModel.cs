@@ -48,6 +48,11 @@ public partial class Compositor {
         TheLangModel.UnigramsFor(keyArray).StableSorted((x, y) => y.Score.CompareTo(x.Score));
     /// <inheritdoc />
     public bool HasUnigramsFor(List<string> keyArray) => TheLangModel.HasUnigramsFor(keyArray);
+
+    /// <summary>
+    ///
+    /// </summary>
+    /// <returns></returns>
     public override int GetHashCode() {
       unchecked {
         int hash = 17;

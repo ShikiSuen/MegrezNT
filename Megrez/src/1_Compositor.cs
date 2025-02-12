@@ -211,10 +211,7 @@ public partial class Compositor {
   /// 且將已經被插入的索引鍵陣列與幅位單元陣列（包括其內的節點）全部清空。
   /// 最近一次的爬軌結果陣列也會被清空。游標跳轉換算表也會被清空。
   /// </summary>
-  public void Clear() {
-    string oldSeparator = Config.Separator;
-    Config = new() { Separator = oldSeparator };
-  }
+  public void Clear() { Config.Clear(); }
 
   /// <summary>
   /// 在游標位置插入給定的索引鍵。
@@ -431,7 +428,7 @@ public partial class Compositor {
   /// <param name="keyArray">指定索引鍵陣列。</param>
   /// <returns>拿取的節點。拿不到的話就會是 null。</returns>
   private Node? GetNodeAt(int location, int length, List<string> keyArray) {
-    location = Math.Max(Math.Min(location, Spans.Count - 1), 0);  // 防呆。
+    location = Math.Max(Math.Min(location, Spans.Count), 0);  // 防呆。
     if (location < 0 || location >= Spans.Count) return null;
     if (Spans[location].NodeOf(length) is not {} node) return null;
     return node.KeyArray.SequenceEqual(keyArray) ? node : null;
@@ -483,20 +480,32 @@ public struct CompositorConfig {
   /// <summary>
   /// 初期化一套組字器組態設定。
   /// </summary>
-  public CompositorConfig(string separator = "") { _separator = separator; }
+  public CompositorConfig(List<Node>? walkedNodes = null, List<string>? keys = null,
+                          List<Compositor.SpanUnit>? spans = null, int cursor = 0, int maxSpanLength = 10,
+                          int marker = 0, string? separator = null) {
+    WalkedNodes = walkedNodes ?? new List<Node>();
+    Keys = keys ?? new List<string>();
+    Spans = spans ?? new List<Compositor.SpanUnit>();
+    _cursor = cursor;
+    _maxSpanLength = maxSpanLength;
+    _marker = marker;
+    Separator = separator ?? "";
+  }
 
   /// <summary>
   /// 最近一次爬軌結果。
   /// </summary>
-  public List<Node> WalkedNodes = new();
+  public List<Node> WalkedNodes { get; set; }
+
   /// <summary>
   /// 該組字器已經插入的的索引鍵，以陣列的形式存放。
   /// </summary>
-  public List<string> Keys = new();
+  public List<string> Keys { get; set; }
+
   /// <summary>
   /// 該組字器的幅位單元陣列。
   /// </summary>
-  public List<Compositor.SpanUnit> Spans = new();
+  public List<Compositor.SpanUnit> Spans { get; set; }
 
   private int _cursor = 0;
   /// <summary>
@@ -529,17 +538,13 @@ public struct CompositorConfig {
     set => _marker = Math.Max(0, Math.Min(value, Length));
   }
 
-  private string _separator;
   /// <summary>
   /// 在生成索引鍵字串時用來分割每個索引鍵單位。最好是鍵盤無法直接敲的 ASCII 字元。
   /// </summary>
   /// <remarks>
   /// 更新該內容會同步更新 <see cref="Compositor.TheSeparator"/>；每次初期化一個新的組字器的時候都會覆寫之。
   /// </remarks>
-  public string Separator {
-    get => _separator;
-    set => _separator = value;
-  }
+  public string Separator { get; set; }
 
   /// <summary>
   /// 公開：該組字器的長度。<para/>
@@ -600,6 +605,19 @@ public struct CompositorConfig {
       hash = hash * 23 + WalkedNodes.GetHashCode();
       return hash;
     }
+  }
+
+  /// <summary>
+  /// 重置包括游標在內的各項參數，且清空各種由組字器生成的內部資料。<para/>
+  /// 且將已經被插入的索引鍵陣列與幅位單元陣列（包括其內的節點）全部清空。
+  /// 最近一次的爬軌結果陣列也會被清空。游標跳轉換算表也會被清空。
+  /// </summary>
+  public void Clear() {
+    Keys = new();
+    Spans = new();
+    WalkedNodes = new();
+    Cursor = 0;
+    Marker = 0;
   }
 }
 }  // namespace Megrez

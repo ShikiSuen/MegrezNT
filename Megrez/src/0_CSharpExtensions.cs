@@ -157,7 +157,6 @@ public class HybridPriorityQueue<T> : IDisposable
   private const int ArrayThreshold = 12;   // 快取大小。
   private const int InitialCapacity = 16;  // 預設容量設為 2 的冪次以優化記憶體對齊。
   private T[] _storage;                    // 改用陣列以減少記憶體間接引用。
-  private int _count;                      // 追蹤實際元素數量。
   private readonly bool _isReversed;
   private bool _usingArray;
   private readonly object _syncRoot = new();
@@ -166,68 +165,68 @@ public class HybridPriorityQueue<T> : IDisposable
   public HybridPriorityQueue(bool reversed = false) {
     _isReversed = reversed;
     _storage = new T[InitialCapacity];
-    _count = 0;
+    Count = 0;
     _usingArray = true;
   }
 
   /// <summary>
   /// 取得佇列中的元素數量。
   /// </summary>
-  public int Count => _count;
+  public int Count { get; private set; }
 
   /// <summary>
   /// 檢查佇列是否為空。
   /// </summary>
-  public bool IsEmpty => _count == 0;
+  public bool IsEmpty => Count == 0;
 
   public void Enqueue(T element) {
     lock (_syncRoot) {
       // 確保容量足夠
-      if (_count == _storage.Length) {
+      if (Count == _storage.Length) {
         Array.Resize(ref _storage, _storage.Length * 2);
       }
 
       if (_usingArray) {
-        if (_count >= ArrayThreshold) {
+        if (Count >= ArrayThreshold) {
           SwitchToHeap();
-          _storage[_count++] = element;
-          HeapifyUp(_count - 1);
+          _storage[Count++] = element;
+          HeapifyUp(Count - 1);
           return;
         }
 
         // 使用二分搜尋找到插入點。
         int insertIndex = FindInsertionPoint(element);
         // 手動移動元素以避免使用 Array.Copy（減少函數呼叫開銷）。
-        for (int i = _count; i > insertIndex; i--) {
+        for (int i = Count; i > insertIndex; i--) {
           _storage[i] = _storage[i - 1];
         }
         _storage[insertIndex] = element;
-        _count++;
+        Count++;
       } else {
-        _storage[_count] = element;
-        HeapifyUp(_count++);
+        _storage[Count] = element;
+        HeapifyUp(Count++);
       }
     }
   }
 
   public T? Dequeue() {
     lock (_syncRoot) {
-      if (_count == 0) return default;
+      if (Count == 0) return default;
 
       T result = _storage[0];
-      _count--;
+      Count--;
 
       if (_usingArray) {
         // 手動移動元素以避免使用 Array.Copy。
-        for (int i = 0; i < _count; i++) {
+        for (int i = 0; i < Count; i++) {
           _storage[i] = _storage[i + 1];
         }
         return result;
       }
 
       // 堆積模式。
-      _storage[0] = _storage[_count];
-      if (_count > 0) HeapifyDown(0);
+      _storage[0] = _storage[Count];
+      if (Count > 0) HeapifyDown(0);
       return result;
     }
   }
@@ -235,7 +234,7 @@ public class HybridPriorityQueue<T> : IDisposable
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   private int FindInsertionPoint(T element) {
     int left = 0;
-    int right = _count;
+    int right = Count;
 
     while (left < right) {
       int mid = left + ((right - left) >> 1);
@@ -259,16 +258,16 @@ public class HybridPriorityQueue<T> : IDisposable
 
   private void SwitchToHeap() {
     var backupStorage = (T[])_storage.Clone();
-    var backupCount = _count;
+    var backupCount = Count;
 
     try {
       _usingArray = false;
-      for (int i = (_count >> 1) - 1; i >= 0; i--) {
+      for (int i = (Count >> 1) - 1; i >= 0; i--) {
         HeapifyDown(i);
       }
     } catch (Exception) {
       _storage = backupStorage;
-      _count = backupCount;
+      Count = backupCount;
       _usingArray = true;
       throw;
     }
@@ -290,7 +289,7 @@ public class HybridPriorityQueue<T> : IDisposable
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   private void HeapifyDown(int index) {
     T item = _storage[index];
-    int half = _count >> 1;
+    int half = Count >> 1;
 
     while (index < half) {
       int leftChild = (index << 1) + 1;
@@ -299,7 +298,7 @@ public class HybridPriorityQueue<T> : IDisposable
 
       T leftChildItem = _storage[leftChild];
 
-      if (rightChild < _count) {
+      if (rightChild < Count) {
         T rightChildItem = _storage[rightChild];
         if (Compare(rightChildItem, leftChildItem) < 0) {
           bestChild = rightChild;
@@ -328,7 +327,7 @@ public class HybridPriorityQueue<T> : IDisposable
         _storage = new T[InitialCapacity];
       }
     }
-    _count = 0;
+    Count = 0;
     _usingArray = true;
   }
 
@@ -354,7 +353,7 @@ public class HybridPriorityQueue<T> : IDisposable
     unchecked {
       int hash = 17;
       hash = hash * 23 + _storage.GetHashCode();
-      hash = hash * 23 + _count.GetHashCode();
+      hash = hash * 23 + Count.GetHashCode();
       hash = hash * 23 + _isReversed.GetHashCode();
       hash = hash * 23 + _usingArray.GetHashCode();
       return hash;
