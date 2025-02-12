@@ -177,7 +177,7 @@ public partial class Compositor {
   /// <param name="separator">多字讀音鍵當中用以分割漢字讀音的記號，預設為「-」。詳見 <see cref="Separator"/>。</param>
   public Compositor(LangModelProtocol langModel, string separator = "-") {
     _theLangModel = new(ref langModel);
-    TheSeparator = separator;
+    Separator = separator;
   }
 
   /// <summary>
