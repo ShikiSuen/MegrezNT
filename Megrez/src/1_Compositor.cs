@@ -68,7 +68,7 @@ public partial class Compositor {
   /// <summary>
   /// 組字器的組態設定。
   /// </summary>
-  public CompositorConfig Config = new();
+  public CompositorConfig Config;
   /// <summary>
   /// 一個幅位單元內所能接受的最長的節點幅位長度。
   /// </summary>
@@ -177,7 +177,8 @@ public partial class Compositor {
   /// <param name="separator">多字讀音鍵當中用以分割漢字讀音的記號，預設為「-」。詳見 <see cref="Separator"/>。</param>
   public Compositor(LangModelProtocol langModel, string separator = "-") {
     _theLangModel = new(ref langModel);
-    Separator = separator;
+    Config = new(separator: separator);
+    TheSeparator = separator;
   }
 
   /// <summary>
@@ -482,17 +483,7 @@ public struct CompositorConfig {
   /// <summary>
   /// 初期化一套組字器組態設定。
   /// </summary>
-  public CompositorConfig(List<Node>? walkedNodes = null, List<string>? keys = null,
-                          List<Compositor.SpanUnit>? spans = null, int cursor = 0, int maxSpanLength = 10,
-                          int marker = 0, string separator = null) {
-    WalkedNodes = walkedNodes ?? new List<Node>();
-    Keys = keys ?? new List<string>();
-    Spans = spans ?? new List<Compositor.SpanUnit>();
-    _cursor = cursor;
-    _maxSpanLength = maxSpanLength;
-    _marker = marker;
-    _separator = separator;
-  }
+  public CompositorConfig(string separator = "") { _separator = separator; }
 
   /// <summary>
   /// 最近一次爬軌結果。
