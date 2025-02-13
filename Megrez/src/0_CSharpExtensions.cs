@@ -321,21 +321,23 @@ namespace Megrez {
     /// 清空佇列。
     /// </summary>
     public void Clear() {
-      if (_storage != null) {
-        Array.Clear(_storage, 0, _storage.Length);
-        if (_storage.Length > InitialCapacity) {
-          _storage = new T[InitialCapacity];
+      lock (_syncRoot) {
+        if (_storage.Length != 0) {
+          Array.Clear(_storage, 0, _storage.Length);
+          if (_storage.Length > InitialCapacity) {
+            _storage = new T[InitialCapacity];
+          }
         }
+        Count = 0;
+        _usingArray = true;
       }
-      Count = 0;
-      _usingArray = true;
     }
 
     public void Dispose() {
       if (_isDisposed) return;
 
       Clear();
-      if (_storage != null) {
+      if (_storage.Length != 0) {
         Array.Clear(_storage, 0, _storage.Length);
         _storage = null!;
       }
