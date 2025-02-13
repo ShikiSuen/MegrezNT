@@ -17,7 +17,7 @@ namespace Megrez {
 /// 單元圖結果陣列。舉例說，如果一個詞有兩個漢字組成的話，那麼讀音也是有兩個、其
 /// 索引鍵也是由兩個讀音組成的，那麼這個節點的幅位長度就是 2。
 /// </summary>
-public partial class Node {
+public class Node {
   // MARK: - Enums
 
   /// <summary>
@@ -141,11 +141,9 @@ public partial class Node {
   /// <param name="obj"></param>
   /// <returns></returns>
   public override bool Equals(object obj) {
-    return obj is not Node node
-               ? false
-               : OverridingScore == node.OverridingScore && KeyArray.SequenceEqual(node.KeyArray) &&
-                     SpanLength == node.SpanLength && Unigrams.SequenceEqual(node.Unigrams) &&
-                     CurrentOverrideType == node.CurrentOverrideType && CurrentUnigramIndex == node.CurrentUnigramIndex;
+    return obj is Node node && (Math.Abs(OverridingScore - node.OverridingScore) < 0.0000001f && KeyArray.SequenceEqual(node.KeyArray) &&
+                                SpanLength == node.SpanLength && Unigrams.SequenceEqual(node.Unigrams) &&
+                                CurrentOverrideType == node.CurrentOverrideType && CurrentUnigramIndex == node.CurrentUnigramIndex);
   }
 
   /// <summary>
@@ -338,7 +336,7 @@ public static class NodeExtensions {
   /// </summary>
   /// <param name="self">節點。</param>
   /// <returns>一個辭典，以座標查索引。允許以游標位置查詢其屬於第幾個幅位座標（從 0 開始算）。</returns>
-  public static Dictionary<int, int> CursorRegionMap(this List<Node> self) =>
+  public static Dictionary<int, int> GetCursorRegionMap(this List<Node> self) =>
       self.NodeBorderPointDictPair().CursorRegionMap;
 
   /// <summary>

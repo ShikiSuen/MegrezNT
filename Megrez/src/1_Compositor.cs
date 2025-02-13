@@ -279,7 +279,7 @@ public partial class Compositor {
         if (target == 0) return false;
         break;
     }
-    if (!WalkedNodes.CursorRegionMap().TryGetValue(key: target, out int currentRegion)) return false;
+    if (!WalkedNodes.GetCursorRegionMap().TryGetValue(key: target, out int currentRegion)) return false;
     int guardedCurrentRegion = Math.Min(WalkedNodes.Count - 1, currentRegion);
     int aRegionForward = Math.Max(currentRegion - 1, 0);
     int currentRegionBorderRear = WalkedNodes.GetRange(0, currentRegion).Select(x => x.SpanLength).Sum();
