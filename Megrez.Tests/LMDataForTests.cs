@@ -1,4 +1,4 @@
-﻿// CSharpened and further development by (c) 2022 and onwards The vChewing Project (MIT License).
+// CSharpened and further development by (c) 2022 and onwards The vChewing Project (MIT License).
 // Was initially rebranded from (c) Lukhnos Liu's C++ library "Gramambular 2" (MIT License).
 // Walking algorithm (Dijkstra) implemented by (c) 2025 and onwards The vChewing Project (MIT License).
 // ====================
@@ -6,86 +6,93 @@
 
 using System.Collections.Generic;
 using System.Linq;
+
 using static System.String;
 // ReSharper disable InconsistentNaming
 
 namespace Megrez.Tests {
 
-public class SimpleLM : LangModelProtocol {
-  private Dictionary<string, List<Unigram>> _database = new();
-  public string separator { get; set; }
-  public SimpleLM(string input, bool swapKeyValue = false, string separator = "") {
-    this.separator = separator;
-    List<string> sStream = new(input.Split('\n'));
-    sStream.ForEach(line => {
-      if (IsNullOrEmpty(line) || line.FirstOrDefault().CompareTo('#') == 0) return;
-      List<string> lineStream = new(line.Split(' '));
-      if (lineStream.Count < 2) return;
-      string col0 = lineStream[0];  // 假設其不為 nil
-      string col1 = lineStream[1];  // 假設其不為 nil
-      double col2 = 0;              // 防呆
-      if (lineStream.Count >= 3 && double.TryParse(lineStream[2], out double number)) col2 = number;
-      string key;
-      string value;
-      if (swapKeyValue) {
-        key = col1;
-        value = col0;
-      } else {
-        key = col0;
-        value = col1;
-      }
-      Unigram u = new(value, col2);
-      if (!_database.ContainsKey(key)) _database.Add(key, new());
-      _database[key].Add(u);
-    });
-  }
-  public bool HasUnigramsFor(List<string> keyArray) => _database.ContainsKey(keyArray.Joined(separator: separator));
-  public List<Unigram> UnigramsFor(List<string> keyArray) =>
-      _database.ContainsKey(keyArray.Joined(separator: separator)) ? _database[keyArray.Joined(separator: separator)]
-                                                                   : new();
-  public void Trim(string key, string value) {
-    if (!_database.TryGetValue(key, out List<Unigram>? arr)) return;
-
-    if (arr is not {} theArr) return;
-    theArr = theArr.Where(x => x.Value != value).ToList();
-    if (theArr.IsEmpty()) {
-      _database.Remove(key);
-      return;
+  public class SimpleLM : LangModelProtocol {
+    private Dictionary<string, List<Unigram>> _database = new();
+    public string separator { get; set; }
+    public SimpleLM(string input, bool swapKeyValue = false, string separator = "") {
+      this.separator = separator;
+      List<string> sStream = new(input.Split('\n'));
+      sStream.ForEach(line => {
+        if (IsNullOrEmpty(line) || line.FirstOrDefault().CompareTo('#') == 0)
+          return;
+        List<string> lineStream = new(line.Split(' '));
+        if (lineStream.Count < 2)
+          return;
+        string col0 = lineStream[0];  // 假設其不為 nil
+        string col1 = lineStream[1];  // 假設其不為 nil
+        double col2 = 0;              // 防呆
+        if (lineStream.Count >= 3 && double.TryParse(lineStream[2], out double number))
+          col2 = number;
+        string key;
+        string value;
+        if (swapKeyValue) {
+          key = col1;
+          value = col0;
+        } else {
+          key = col0;
+          value = col1;
+        }
+        Unigram u = new(value, col2);
+        if (!_database.ContainsKey(key))
+          _database.Add(key, new());
+        _database[key].Add(u);
+      });
     }
-    _database[key] = theArr;
+    public bool HasUnigramsFor(List<string> keyArray) => _database.ContainsKey(keyArray.Joined(separator: separator));
+    public List<Unigram> UnigramsFor(List<string> keyArray) =>
+        _database.ContainsKey(keyArray.Joined(separator: separator)) ? _database[keyArray.Joined(separator: separator)]
+                                                                     : new();
+    public void Trim(string key, string value) {
+      if (!_database.TryGetValue(key, out List<Unigram>? arr))
+        return;
+
+      if (arr is not { } theArr)
+        return;
+      theArr = theArr.Where(x => x.Value != value).ToList();
+      if (theArr.IsEmpty()) {
+        _database.Remove(key);
+        return;
+      }
+      _database[key] = theArr;
+    }
   }
-}
 
-public class MockLM : LangModelProtocol {
-  public bool HasUnigramsFor(List<string> keyArray) => !IsNullOrEmpty(keyArray.Joined());
-  public List<Unigram> UnigramsFor(List<string> keyArray) => new() { new(value: keyArray.Joined(), score: -1) };
-}
+  public class MockLM : LangModelProtocol {
+    public bool HasUnigramsFor(List<string> keyArray) => !IsNullOrEmpty(keyArray.Joined());
+    public List<Unigram> UnigramsFor(List<string> keyArray) => new() { new(value: keyArray.Joined(), score: -1) };
+  }
 
-public class TestLM : LangModelProtocol {
-  public bool HasUnigramsFor(List<string> keyArray) => keyArray.Joined() == "foo";
-  public List<Unigram> UnigramsFor(List<string> keyArray) => keyArray.Joined() == "foo"
-                                                                 ? new() { new(keyArray.Joined(), -1) }
-                                                                 : new List<Unigram>();
-}
+  public class TestLM : LangModelProtocol {
+    public bool HasUnigramsFor(List<string> keyArray) => keyArray.Joined() == "foo";
+    public List<Unigram> UnigramsFor(List<string> keyArray) => keyArray.Joined() == "foo"
+                                                                   ? new() { new(keyArray.Joined(), -1) }
+                                                                   : new List<Unigram>();
+  }
 
-public class TestLMForRanked : LangModelProtocol {
-  public bool HasUnigramsFor(List<string> keyArray) => keyArray.Joined() == "foo";
-  public List<Unigram> UnigramsFor(List<string> keyArray) => keyArray.Joined() == "foo"
-                                                                 ? new() { new("middle", -5), new("highest", -2),
+  public class TestLMForRanked : LangModelProtocol {
+    public bool HasUnigramsFor(List<string> keyArray) => keyArray.Joined() == "foo";
+    public List<Unigram> UnigramsFor(List<string> keyArray) => keyArray.Joined() == "foo"
+                                                                   ? new() { new("middle", -5), new("highest", -2),
                                                                            new("lowest", -10) }
-                                                                 : new List<Unigram>();
-}
+                                                                   : new List<Unigram>();
+  }
 
-public class TestDataClass {
-  public static string StrStressData =
-      @"
+  public class TestDataClass {
+    public static string StrStressData =
+        @"
 yi1 一 -2.08170692
 yi1-yi1 一一 -4.38468400
 
     ";
 
-  public static string StrEmojiSampleData =
-      @"
+    public static string StrEmojiSampleData =
+        @"
 gao1 高 -2.9396
 re4 熱 -3.6024
 gao1re4 高熱 -6.526
@@ -105,8 +112,8 @@ mi4feng1 🐝 -11
 
       ";
 
-  public static string StrSampleData =
-      @"
+    public static string StrSampleData =
+        @"
 #
 # 下述詞頻資料取自 libTaBE 資料庫 (https://sourceforge.net/projects/libtabe/)
 # (2002 最終版). 該專案於 1999 年由 Pai-Hsiang Hsiao 發起、以 BSD 授權發行。
@@ -201,8 +208,8 @@ yu4 育 -3.30192952
 
 ";
 
-  public static string StrSampleDataLitch =
-      @"
+    public static string StrSampleDataLitch =
+        @"
 nai3ji1 荔枝 -4.73
 nai3ji1 奶積 -9.399
 nai3 乃 -5.262
@@ -316,5 +323,5 @@ ji1 楫 -9.543
 ji1 膣 -9.543
 
 ";
-}
+  }
 }
