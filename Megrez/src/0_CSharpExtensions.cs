@@ -257,8 +257,8 @@ namespace Megrez {
     }
 
     private void SwitchToHeap() {
-      var backupStorage = (T[])_storage.Clone();
-      var backupCount = Count;
+      T[] backupStorage = (T[])_storage.Clone();
+      int backupCount = Count;
 
       try {
         _usingArray = false;

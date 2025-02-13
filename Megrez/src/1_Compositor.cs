@@ -630,7 +630,7 @@ namespace Megrez {
     /// </summary>
     public void DropNodesBeyondMaxSpanLength() {
       if (Spans.IsEmpty()) return;
-      var indicesOfPositions = new BRange(0, Spans.Count - 1).ToList();
+      List<int> indicesOfPositions = new BRange(0, Spans.Count - 1).ToList();
       foreach (int currentPos in indicesOfPositions) {
         foreach (int currentSpanLength in Spans[currentPos].Nodes.Keys) {
           if (currentSpanLength > MaxSpanLength) {
