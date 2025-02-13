@@ -108,7 +108,7 @@ mi4feng1 🐝 -11
   public static string StrSampleData =
       @"
 #
-# 下述詞頻資料取自 libTaBE 資料庫 (http://sourceforge.net/projects/libtabe/)
+# 下述詞頻資料取自 libTaBE 資料庫 (https://sourceforge.net/projects/libtabe/)
 # (2002 最終版). 該專案於 1999 年由 Pai-Hsiang Hsiao 發起、以 BSD 授權發行。
 #
 ni3 你 -6.000000 // Non-LibTaBE
