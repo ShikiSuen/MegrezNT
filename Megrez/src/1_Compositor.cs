@@ -487,7 +487,7 @@ public struct CompositorConfig {
     Keys = keys ?? new List<string>();
     Spans = spans ?? new List<Compositor.SpanUnit>();
     _cursor = cursor;
-    _maxSpanLength = maxSpanLength;
+    _maxSpanLength = Math.Max(6, maxSpanLength);
     _marker = marker;
     Separator = separator ?? "";
   }
