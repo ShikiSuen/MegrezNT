@@ -525,7 +525,10 @@ public struct CompositorConfig {
   /// </summary>
   public int MaxSpanLength {
     get => _maxSpanLength;
-    set => _maxSpanLength = Math.Max(6, value);
+    set {
+      _maxSpanLength = Math.Max(6, value);
+      DropNodesBeyondMaxSpanLength();
+    }
   }
 
   private int _marker = 0;
@@ -618,6 +621,21 @@ public struct CompositorConfig {
     WalkedNodes = new();
     Cursor = 0;
     Marker = 0;
+  }
+
+  /// <summary>
+  /// 清除所有幅長超過 MaxSpanLength 的節點。
+  /// </summary>
+  public void DropNodesBeyondMaxSpanLength() {
+    if (Spans.IsEmpty()) return;
+    var indicesOfPositions = new BRange(0, Spans.Count - 1).ToList();
+    foreach (int currentPos in indicesOfPositions) {
+      foreach (int currentSpanLength in Spans[currentPos].Nodes.Keys) {
+        if (currentSpanLength > MaxSpanLength) {
+          Spans[currentPos].Nodes.Remove(currentSpanLength);
+        }
+      }
+    }
   }
 }
 }  // namespace Megrez
